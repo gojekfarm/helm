@@ -7,3 +7,5 @@
 _dist/
 bin/
 vendor/
+helm3
+./helm

@@ -17,6 +17,7 @@ limitations under the License.
 package action
 
 import (
+	"fmt"
 	"path"
 	"regexp"
 
@@ -226,6 +227,7 @@ func (c *Configuration) Init(getter genericclioptions.RESTClientGetter, namespac
 
 	clientset, err := kc.Factory.KubernetesClientSet()
 	if err != nil {
+		fmt.Println("asfasfsf")
 		return err
 	}
 

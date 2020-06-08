@@ -115,6 +115,7 @@ func (s *EnvSettings) Namespace() string {
 		return s.namespace
 	}
 
+	fmt.Println("s.namespace is empty")
 	if ns, _, err := s.RESTClientGetter().ToRawKubeConfigLoader().Namespace(); err == nil {
 		return ns
 	}

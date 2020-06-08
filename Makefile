@@ -58,10 +58,13 @@ all: build
 #  build
 
 .PHONY: build
-build: $(BINDIR)/$(BINNAME)
+build: $(BINDIR)/$(BINNAME) $(BINDIR)/server
 
 $(BINDIR)/$(BINNAME): $(SRC)
 	GO111MODULE=on go build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(BINNAME) ./cmd/helm
+
+$(BINDIR)/server: $(SRC)
+	GO111MODULE=on go build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(BINNAME) ./cmd/server
 
 # ------------------------------------------------------------------------------
 #  test
