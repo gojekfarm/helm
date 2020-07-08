@@ -55,12 +55,12 @@ func (s *UpgradeTestSuite) TestShouldReturnDeployedStatusOnSuccessfulUpgrade() {
     "name": "redis-v5",
     "namespace": "something"}`, chartName)
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/upgrade", s.server.URL), strings.NewReader(body))
-	s.mockChartLoader.On("LocateChart", chartName, s.appConfig).Return("./testdata/albatross", nil)
-	ucfg := api.ReleaseConfig{ChartName: chartName, Name: "redis-v5", Namespace: "something"}
+	s.mockUpgrader.On("UpgradeLocateChart", chartName, s.appConfig).Return("./testdata/albatross", nil)
+	ucfg := api.ReleaseConfig{ChartName: chartName, Name: "redis-v5", Namespace: "something", Version: ">0.0.0-0"}
 	s.mockUpgrader.On("GetInstall").Return(false)
 	s.mockUpgrader.On("SetConfig", ucfg)
 	release := &release.Release{Info: &release.Info{Status: release.StatusDeployed}}
-	var vals map[string]interface{}
+	vals := map[string]interface{}{}
 	//TODO: pass chart object and verify values present testdata chart yml
 	s.mockUpgrader.On("Run", "redis-v5", mock.AnythingOfType("*chart.Chart"), vals).Return(release, nil)
 
@@ -85,7 +85,9 @@ func (s *UpgradeTestSuite) TestShouldReturnInternalServerErrorOnFailure() {
     "name": "redis-v5",
     "namespace": "something"}`, chartName)
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/install", s.server.URL), strings.NewReader(body))
-	s.mockChartLoader.On("LocateChart", chartName, s.appConfig).Return("./testdata/albatross", errors.New("Invalid chart"))
+	ucfg := api.ReleaseConfig{ChartName: chartName, Name: "redis-v5", Namespace: "something", Version: ">0.0.0-0"}
+	s.mockUpgrader.On("SetConfig", ucfg)
+	s.mockUpgrader.On("UpgradeLocateChart", chartName, s.appConfig).Return("./testdata/albatross", errors.New("Invalid chart"))
 
 	resp, err := http.DefaultClient.Do(req)
 

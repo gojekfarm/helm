@@ -59,7 +59,7 @@ func (s *InstallerTestSuite) TestShouldReturnDeployedStatusOnSuccessfulInstall()
 	icfg := api.ReleaseConfig{ChartName: chartName, Name: "redis-v5", Namespace: "something"}
 	s.mockInstall.On("SetConfig", icfg)
 	release := &release.Release{Info: &release.Info{Status: release.StatusDeployed}}
-	var vals map[string]interface{}
+	vals := map[string]interface{}{}
 	//TODO: pass chart object and verify values present testdata chart yml
 	s.mockInstall.On("Run", mock.AnythingOfType("*chart.Chart"), vals).Return(release, nil)
 

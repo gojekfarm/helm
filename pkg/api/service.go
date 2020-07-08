@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/cli/values"
+	"helm.sh/helm/v3/pkg/strvals"
 
 	"helm.sh/helm/v3/pkg/api/logger"
 	"helm.sh/helm/v3/pkg/chart"
@@ -18,6 +20,7 @@ import (
 
 type upgrader interface {
 	SetConfig(ReleaseConfig)
+	UpgradeLocateChart(name string, settings *cli.EnvSettings) (string, error)
 	GetInstall() bool
 	upgraderunner
 }
@@ -39,6 +42,8 @@ type ReleaseConfig struct {
 	Name      string
 	Namespace string
 	ChartName string
+	Version   string
+	Install   bool
 }
 
 type ChartValues map[string]interface{}
@@ -48,11 +53,19 @@ type ReleaseResult struct {
 }
 
 func (s Service) getValues(vals ChartValues) (ChartValues, error) {
-	//	valueOpts := &values.Options{}
-	//valueOpts.Values = append(valueOpts.Values, vals)
-	//TODO: we need to make this as Provider, so it'll be able to merge
-	// why do we need getter.ALl?
-	return vals, nil
+	valueOpts := &values.Options{}
+	for k, v := range vals {
+		valueOpts.Values = append(valueOpts.Values, k+"="+(v.(string)))
+	}
+	base := map[string]interface{}{}
+	for _, value := range valueOpts.Values {
+		if err := strvals.ParseInto(value, base); err != nil {
+			return base, err
+		}
+	}
+	//TODO: we %need to make this as Provider, so it'll be able to merge
+	// why do we need getter.All?
+	return base, nil
 }
 
 func (s Service) Install(ctx context.Context, cfg ReleaseConfig, values ChartValues) (*ReleaseResult, error) {
@@ -71,10 +84,11 @@ func (s Service) Install(ctx context.Context, cfg ReleaseConfig, values ChartVal
 }
 
 func (s Service) Upgrade(ctx context.Context, cfg ReleaseConfig, values ChartValues) (*ReleaseResult, error) {
+	s.upgrader.SetConfig(cfg)
 	if err := s.validate(cfg, values); err != nil {
 		return nil, fmt.Errorf("error request validation: %v", err)
 	}
-	chart, err := s.loadChart(cfg.ChartName)
+	chart, err := s.loadUpgradeChart(cfg.ChartName)
 	if err != nil {
 		return nil, err
 	}
@@ -89,13 +103,25 @@ func (s Service) Upgrade(ctx context.Context, cfg ReleaseConfig, values ChartVal
 			return s.installChart(cfg, chart, vals)
 		}
 	}
-
 	return s.upgradeRelease(cfg, chart, vals)
 }
 
 func (s Service) loadChart(chartName string) (*chart.Chart, error) {
 	logger.Debugf("[install/upgrade] chart name: %s", chartName)
-	cp, err := s.chartloader.LocateChart(chartName, s.settings)
+	cp, err := s.LocateChart(chartName, s.settings)
+	if err != nil {
+		return nil, fmt.Errorf("error in locating chart: %v", err)
+	}
+	var requestedChart *chart.Chart
+	if requestedChart, err = loader.Load(cp); err != nil {
+		return nil, fmt.Errorf("error loading chart: %v", err)
+	}
+	return requestedChart, nil
+}
+
+func (s Service) loadUpgradeChart(chartName string) (*chart.Chart, error) {
+	logger.Debugf("[install/upgrade] chart name: %s", chartName)
+	cp, err := s.upgrader.UpgradeLocateChart(chartName, s.settings)
 	if err != nil {
 		return nil, fmt.Errorf("error in locating chart: %v", err)
 	}
@@ -120,7 +146,6 @@ func (s Service) installChart(icfg ReleaseConfig, ch *chart.Chart, vals ChartVal
 }
 
 func (s Service) upgradeRelease(ucfg ReleaseConfig, ch *chart.Chart, vals ChartValues) (*ReleaseResult, error) {
-	s.upgrader.SetConfig(ucfg)
 	release, err := s.upgrader.Run(ucfg.Name, ch, vals)
 	if err != nil {
 		return nil, fmt.Errorf("error in upgrading chart: %v", err)

@@ -3,6 +3,7 @@ package api
 import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/release"
 )
 
@@ -24,10 +25,16 @@ type historyrunner interface {
 
 func (u *Upgrader) SetConfig(cfg ReleaseConfig) {
 	u.Namespace = cfg.Namespace
+	u.ChartPathOptions.Version = cfg.Version
+	u.Install = cfg.Install
 }
 
 func (u *Upgrader) GetInstall() bool {
 	return u.Install
+}
+
+func (u *Upgrader) UpgradeLocateChart(name string, settings *cli.EnvSettings) (string, error) {
+	return u.LocateChart(name, settings)
 }
 
 func (h *History) SetConfig() {

@@ -12,7 +12,9 @@ type UpgradeRequest struct {
 	Name      string                 `json:"name"`
 	Namespace string                 `json:"namespace"`
 	Chart     string                 `json:"chart"`
+	Version   string                 `json:"version,omitempty"`
 	Values    map[string]interface{} `json:"values"`
+	Install   bool                   `json:"install,omitempty"`
 }
 
 type UpgradeResponse struct {
@@ -33,8 +35,14 @@ func Upgrade(svc Service) http.Handler {
 		}
 
 		defer r.Body.Close()
+
+		if req.Version == "" {
+			logger.Debugf("setting version to >0.0.0-0")
+			req.Version = ">0.0.0-0"
+		}
+
 		var response UpgradeResponse
-		cfg := ReleaseConfig{ChartName: req.Chart, Name: req.Name, Namespace: req.Namespace}
+		cfg := ReleaseConfig{ChartName: req.Chart, Name: req.Name, Namespace: req.Namespace, Version: req.Version, Install: req.Install}
 		res, err := svc.Upgrade(r.Context(), cfg, req.Values)
 		if err != nil {
 			respondUpgradeError(w, "error while upgrading chart: %v", err)
