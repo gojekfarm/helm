@@ -8,8 +8,6 @@ import (
 	"strings"
 
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/cli/values"
-	"helm.sh/helm/v3/pkg/strvals"
 
 	"helm.sh/helm/v3/pkg/api/logger"
 	"helm.sh/helm/v3/pkg/chart"
@@ -53,19 +51,22 @@ type ReleaseResult struct {
 }
 
 func (s Service) getValues(vals ChartValues) (ChartValues, error) {
-	valueOpts := &values.Options{}
-	for k, v := range vals {
-		valueOpts.Values = append(valueOpts.Values, k+"="+(v.(string)))
-	}
-	base := map[string]interface{}{}
-	for _, value := range valueOpts.Values {
-		if err := strvals.ParseInto(value, base); err != nil {
-			return base, err
-		}
-	}
-	//TODO: we %need to make this as Provider, so it'll be able to merge
-	// why do we need getter.All?
-	return base, nil
+	fmt.Printf("%+v", vals)
+
+	return vals, nil
+	// valueOpts := &values.Options{}
+	// for k, v := range vals {
+	// 	valueOpts.Values = append(valueOpts.Values, k+"="+(v.(string)))
+	// }
+	// base := map[string]interface{}{}
+	// for _, value := range valueOpts.Values {
+	// 	if err := strvals.ParseInto(value, base); err != nil {
+	// 		return base, err
+	// 	}
+	// }
+	// //TODO: we %need to make this as Provider, so it'll be able to merge
+	// // why do we need getter.All?
+	// return base, nil
 }
 
 func (s Service) Install(ctx context.Context, cfg ReleaseConfig, values ChartValues) (*ReleaseResult, error) {
@@ -92,7 +93,9 @@ func (s Service) Upgrade(ctx context.Context, cfg ReleaseConfig, values ChartVal
 	if err != nil {
 		return nil, err
 	}
+
 	vals, err := s.getValues(values)
+	fmt.Printf("%v", vals)
 	if err != nil {
 		return nil, fmt.Errorf("error merging values: %v", err)
 	}

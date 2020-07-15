@@ -12,9 +12,8 @@ type UpgradeRequest struct {
 	Name      string                 `json:"name"`
 	Namespace string                 `json:"namespace"`
 	Chart     string                 `json:"chart"`
-	Version   string                 `json:"version,omitempty"`
 	Values    map[string]interface{} `json:"values"`
-	Install   bool                   `json:"install,omitempty"`
+	Flags     map[string]interface{} `json:"flags"`
 }
 
 type UpgradeResponse struct {
@@ -25,7 +24,6 @@ type UpgradeResponse struct {
 func Upgrade(svc Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-
 		var req UpgradeRequest
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err == io.EOF || err != nil {
@@ -33,16 +31,27 @@ func Upgrade(svc Service) http.Handler {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
 		defer r.Body.Close()
 
-		if req.Version == "" {
+		var install bool
+		var version string
+		for key, value := range req.Flags {
+			if key == "install" {
+				install = value.(bool)
+			}
+			if key == "version" {
+				version = value.(string)
+			}
+		}
+
+		if version == "" {
 			logger.Debugf("setting version to >0.0.0-0")
-			req.Version = ">0.0.0-0"
+			version = ">0.0.0-0"
 		}
 
 		var response UpgradeResponse
-		cfg := ReleaseConfig{ChartName: req.Chart, Name: req.Name, Namespace: req.Namespace, Version: req.Version, Install: req.Install}
+		cfg := ReleaseConfig{ChartName: req.Chart, Name: req.Name, Namespace: req.Namespace, Version: version, Install: install}
+
 		res, err := svc.Upgrade(r.Context(), cfg, req.Values)
 		if err != nil {
 			respondUpgradeError(w, "error while upgrading chart: %v", err)
