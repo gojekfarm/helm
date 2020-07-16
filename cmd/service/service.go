@@ -8,7 +8,6 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/api"
 	"helm.sh/helm/v3/pkg/api/logger"
-	"helm.sh/helm/v3/pkg/api/ping"
 	"helm.sh/helm/v3/pkg/servercontext"
 )
 
@@ -42,7 +41,7 @@ func startServer() {
 		api.NewUpgrader(actionUpgrade),
 		api.NewHistory(actionHistory))
 
-	router.Handle("/ping", setContentType(ping.Handler())).Methods(http.MethodGet)
+	router.Handle("/ping", setContentType(api.Ping())).Methods(http.MethodGet)
 	router.Handle("/list", setContentType(api.List(service))).Methods(http.MethodPost)
 	router.Handle("/install", setContentType(api.Install(service))).Methods(http.MethodPost)
 	router.Handle("/upgrade", setContentType(api.Upgrade(service))).Methods(http.MethodPost)
