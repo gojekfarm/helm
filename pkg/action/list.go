@@ -17,7 +17,6 @@ limitations under the License.
 package action
 
 import (
-	"fmt"
 	"path"
 	"regexp"
 
@@ -155,8 +154,6 @@ func (l *List) Run() ([]*release.Release, error) {
 	results, err := l.cfg.Releases.List(func(rel *release.Release) bool {
 		// Skip anything that the mask doesn't cover
 		currentStatus := l.StateMask.FromName(rel.Info.Status.String())
-		fmt.Println("state mask", l.StateMask)
-		fmt.Println("current status", currentStatus)
 		if l.StateMask&currentStatus == 0 {
 			return false
 		}

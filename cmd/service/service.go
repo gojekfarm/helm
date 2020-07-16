@@ -16,7 +16,7 @@ func main() {
 	startServer()
 }
 
-func setContentType(next http.Handler) http.Handler {
+func ContentTypeMiddle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
@@ -41,10 +41,10 @@ func startServer() {
 		api.NewUpgrader(actionUpgrade),
 		api.NewHistory(actionHistory))
 
-	router.Handle("/ping", setContentType(api.Ping())).Methods(http.MethodGet)
-	router.Handle("/list", setContentType(api.List(service))).Methods(http.MethodPost)
-	router.Handle("/install", setContentType(api.Install(service))).Methods(http.MethodPost)
-	router.Handle("/upgrade", setContentType(api.Upgrade(service))).Methods(http.MethodPost)
+	router.Handle("/ping", ContentTypeMiddle(api.Ping())).Methods(http.MethodGet)
+	router.Handle("/list", ContentTypeMiddle(api.List(service))).Methods(http.MethodPost)
+	router.Handle("/install", ContentTypeMiddle(api.Install(service))).Methods(http.MethodPost)
+	router.Handle("/upgrade", ContentTypeMiddle(api.Upgrade(service))).Methods(http.MethodPost)
 
 	err := http.ListenAndServe(fmt.Sprintf(":%d", 8080), router)
 	if err != nil {

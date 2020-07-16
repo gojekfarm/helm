@@ -46,13 +46,13 @@ func List(svc Service) http.Handler {
 		helmReleases, err := svc.List(request.ReleaseStatus, request.NameSpace)
 
 		if err != nil {
-			respondInstallError(w, "error while listing charts: %v", err)
+			respondListError(w, "error while listing charts: %v", err)
 		}
 
 		response = ListResponse{"", helmReleases}
 		err = json.NewEncoder(w).Encode(response)
 		if err != nil {
-			respondInstallError(w, "error writing response: %v", err)
+			respondListError(w, "error writing response: %v", err)
 			return
 		}
 	})

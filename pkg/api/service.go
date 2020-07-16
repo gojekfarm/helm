@@ -151,12 +151,7 @@ func (s Service) List(releaseStatus string, namespace string) ([]Release, error)
 		return nil, errors.New("invalid release status")
 	}
 
-	allNameSpaces := true
-	if namespace != "" {
-		allNameSpaces = false
-	}
-
-	s.ListRunner.SetConfig(state, allNameSpaces)
+	s.ListRunner.SetConfig(state, namespace == "")
 	s.ListRunner.SetStateMask()
 
 	releases, err := s.ListRunner.Run()
