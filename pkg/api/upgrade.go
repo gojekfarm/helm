@@ -12,8 +12,8 @@ type UpgradeRequest struct {
 	Name      string                 `json:"name"`
 	Namespace string                 `json:"namespace"`
 	Chart     string                 `json:"chart"`
-	Values    map[string]interface{} `json:"values"`
-	Flags     map[string]interface{} `json:"flags"`
+	Values    map[string]interface{} `json:"values,omitempty"`
+	Flags     map[string]interface{} `json:"flags,omitempty"`
 }
 
 type UpgradeResponse struct {
@@ -27,8 +27,8 @@ func Upgrade(svc Service) http.Handler {
 		var req UpgradeRequest
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err == io.EOF || err != nil {
-			logger.Errorf("[Upgrade] error decoding request: %v", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
+			logger.Errorf("[Upgrade] error decoding request: %v", err)
 			return
 		}
 		defer r.Body.Close()

@@ -142,7 +142,7 @@ func (s *ServiceTestSuite) TestUpgradeInstallTrueShouldInstallChart() {
 		ChartName: chartName,
 	}
 	s.upgrader.On("SetConfig", cfg)
-	s.upgrader.On("UpgradeLocateChart", chartName, s.settings).Return("testdata/albatross", nil)
+	s.chartloader.On("LocateChart", chartName, s.settings).Return("testdata/albatross", nil)
 	s.upgrader.On("GetInstall").Return(true)
 	s.installer.On("SetConfig", cfg)
 	s.history.On("Run", "some-component").Return([]*release.Release{}, driver.ErrReleaseNotFound)
@@ -170,7 +170,7 @@ func (s *ServiceTestSuite) TestUpgradeInstallFalseShouldNotInstallChart() {
 		ChartName: chartName,
 	}
 	vals := map[string]interface{}{}
-	s.upgrader.On("UpgradeLocateChart", chartName, s.settings).Return("testdata/albatross", nil)
+	s.chartloader.On("LocateChart", chartName, s.settings).Return("testdata/albatross", nil)
 	s.upgrader.On("GetInstall").Return(false)
 	s.upgrader.On("SetConfig", cfg)
 	release := &release.Release{Name: "some-comp-release", Info: &release.Info{Status: release.StatusDeployed}}
@@ -196,7 +196,7 @@ func (s *ServiceTestSuite) TestUpgradeShouldReturnErrorOnFailedUpgradeRun() {
 		ChartName: chartName,
 	}
 	vals := map[string]interface{}{}
-	s.upgrader.On("UpgradeLocateChart", chartName, s.settings).Return("testdata/albatross", nil)
+	s.chartloader.On("LocateChart", chartName, s.settings).Return("testdata/albatross", nil)
 	s.upgrader.On("GetInstall").Return(false)
 	s.upgrader.On("SetConfig", cfg)
 	release := &release.Release{Name: "some-comp-release", Info: &release.Info{Status: release.StatusDeployed}}
@@ -219,7 +219,7 @@ func (s *ServiceTestSuite) TestUpgradeShouldReturnResultOnSuccess() {
 		ChartName: chartName,
 	}
 	vals := map[string]interface{}{}
-	s.upgrader.On("UpgradeLocateChart", chartName, s.settings).Return("testdata/albatross", nil)
+	s.chartloader.On("LocateChart", chartName, s.settings).Return("testdata/albatross", nil)
 	s.upgrader.On("GetInstall").Return(false)
 	s.upgrader.On("SetConfig", cfg)
 	release := &release.Release{Name: "some-comp-release", Info: &release.Info{Status: release.StatusDeployed}}
@@ -249,7 +249,7 @@ func (s *ServiceTestSuite) TestUpgradeValidateFailShouldResultFailure() {
 	t := s.T()
 	assert.Nil(t, res)
 	assert.EqualError(t, err, "error request validation: cannot refer local chart")
-	s.chartloader.AssertNotCalled(t, "UpgradeLocateChart")
+	s.chartloader.AssertNotCalled(t, "LocateChart")
 	s.upgrader.AssertNotCalled(t, "SetConfig")
 	s.upgrader.AssertNotCalled(t, "Run")
 }
@@ -262,7 +262,7 @@ func (s *ServiceTestSuite) TestUpgradeShouldReturnErrorOnInvalidChart() {
 		ChartName: chartName,
 	}
 	var vals api.ChartValues
-	s.upgrader.On("UpgradeLocateChart", chartName, s.settings).Return("", errors.New("Unable to find chart"))
+	s.chartloader.On("LocateChart", chartName, s.settings).Return("", errors.New("Unable to find chart"))
 	s.upgrader.On("SetConfig", cfg)
 	res, err := s.svc.Upgrade(s.ctx, cfg, vals)
 
@@ -384,11 +384,6 @@ func (m *mockUpgrader) Run(name string, chart *chart.Chart, vals map[string]inte
 
 func (m *mockUpgrader) SetConfig(cfg api.ReleaseConfig) {
 	_ = m.Called(cfg)
-}
-
-func (m *mockUpgrader) UpgradeLocateChart(name string, settings *cli.EnvSettings) (string, error) {
-	args := m.Called(name, settings)
-	return args.Get(0).(string), args.Error(1)
 }
 
 func (m *mockUpgrader) GetInstall() bool {
