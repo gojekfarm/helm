@@ -69,8 +69,6 @@ func (s *UpgradeTestSuite) TestShouldReturnDeployedStatusOnSuccessfulUpgrade() {
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 	expectedResponse := `{"status":"deployed"}` + "\n"
 	respBody, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(expectedResponse)
-	fmt.Println(respBody)
 
 	assert.Equal(s.T(), expectedResponse, string(respBody))
 	require.NoError(s.T(), err)

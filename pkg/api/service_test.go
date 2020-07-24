@@ -320,7 +320,7 @@ func (s *ServiceTestSuite) TestListShouldReturnAllReleasesIfNoFilterIsPassed() {
 		"test-release-0.1",
 		"0.1",
 	}}
-	
+
 	assert.Equal(t, response, res)
 	s.lister.AssertExpectations(t)
 }

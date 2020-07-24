@@ -82,6 +82,7 @@ func (s *ListTestSuite) TestShouldReturnReleasesWhenSuccessfulAPICall() {
 
 	res, err := http.DefaultClient.Do(req)
 	assert.Equal(s.T(), 200, res.StatusCode)
+	require.NoError(s.T(), err)
 
 	var actualResponse api.ListResponse
 	err = json.NewDecoder(res.Body).Decode(&actualResponse)
@@ -106,16 +107,14 @@ func (s *ListTestSuite) TestShouldReturnBadRequestErrorIfItHasInvalidCharacter()
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/list", s.server.URL), strings.NewReader(body))
 
 	res, err := http.DefaultClient.Do(req)
+	require.NoError(s.T(), err)
 
 	assert.Equal(s.T(), 400, res.StatusCode)
-
 	expectedResponse := "invalid character '\"' after object key:value pair"
-
 	var actualResponse api.ListResponse
 	err = json.NewDecoder(res.Body).Decode(&actualResponse)
-
-	assert.Equal(s.T(), expectedResponse, actualResponse.Error)
 	require.NoError(s.T(), err)
+	assert.Equal(s.T(), expectedResponse, actualResponse.Error)
 }
 
 func (s *ListTestSuite) TearDownTest() {

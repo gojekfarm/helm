@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/api"
@@ -42,12 +43,12 @@ func startServer() {
 		api.NewHistory(actionHistory))
 
 	router.Handle("/ping", ContentTypeMiddle(api.Ping())).Methods(http.MethodGet)
-	router.Handle("/list", ContentTypeMiddle(api.List(service))).Methods(http.MethodPost)
-	router.Handle("/install", ContentTypeMiddle(api.Install(service))).Methods(http.MethodPost)
+	router.Handle("/list", ContentTypeMiddle(api.List(service))).Methods(http.MethodGet)
+	router.Handle("/install", ContentTypeMiddle(api.Install(service))).Methods(http.MethodPut)
 	router.Handle("/upgrade", ContentTypeMiddle(api.Upgrade(service))).Methods(http.MethodPost)
 
 	err := http.ListenAndServe(fmt.Sprintf(":%d", 8080), router)
 	if err != nil {
-		fmt.Println("error starting server", err)
+		logger.Errorf("error starting server", err)
 	}
 }

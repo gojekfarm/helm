@@ -2,8 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"helm.sh/helm/v3/pkg/api/logger"
 	"net/http"
+
+	"helm.sh/helm/v3/pkg/api/logger"
 )
 
 type PingResponse struct {
